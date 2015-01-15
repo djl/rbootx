@@ -1,0 +1,100 @@
+#!/bin/bash
+#/ Usage: nikola [options] SRC DEST
+#/
+#/ Options:
+#/   -e FILENAME      Path to file containing exclusion patterns
+#/   -n               Perform a trial run with no changes made
+#/   -q               Surpress non-error messages
+#/   -h               Show this message and exit
+PROGNAME=$(basename "$0")
+EXCLUDE=(
+  ".DocumentRevisions-*/"
+  ".Spotlight-*/"
+  ".Trash"
+  ".Trashes"
+  "/.fseventsd"
+  "/.hotfiles.btree"
+  "/.vol/*"
+  "/Library/Caches/*"
+  "/Network"
+  "/System/Library/Caches/com.apple.bootstamps/*"
+  "/System/Library/Caches/com.apple.corestorage/*"
+  "/System/Library/Caches/com.apple.kext.caches/*"
+  "/Volumes/*"
+  "/automount"
+  "/cores"
+  "/dev/*"
+  "/net"
+  "/private/tmp/*"
+  "/private/var/db/dyld/dyld_*"
+  "/private/var/folders/*"
+  "/private/var/vm/*"
+  "~/Library/Caches/*"
+)
+RSYNC_ARGS=(
+  --acls
+  --archive
+  --delete
+  --delete-excluded
+  --hard-links
+  --hfs-compression
+  --one-file-system
+  --protect-decmpfs
+  --sparse
+  --stats
+  --xattrs
+)
+
+abort() {
+  echo "$PROGNAME: $1" >&2
+  exit 1
+}
+
+usage() {
+  grep "^#/" $0 | cut -c4- >&2
+  exit 2
+}
+
+while getopts :hna:b:e: o; do
+  case "$o" in
+    a) POST_SCRIPT="$OPTARG" ;;
+    b) PRE_SCRIPT="$OPTARG" ;;
+    e) EXCLUDES_FILE="$OPTARG" ;;
+    n) RSYNC_ARGS+=(--dry-run) ;;
+    q) RSYNC_ARGS+=(--quiet) ;;
+    h) usage ;;
+    ?) abort "Invalid option: -$OPTARG" ;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+if [ $# -ne 2 ]; then
+  usage
+fi
+
+SRC="$1"
+DEST="$2"
+
+if [ ! -r "$SRC" ]; then
+  abort "Source '$SRC' not readable"
+fi
+
+if [ ! -w "$DEST" ]; then
+  abort "Destination '$DEST' not writeable"
+fi
+
+for e in "${EXCLUDE[@]}"; do
+  exclude="$exclude--exclude=$e "
+done
+RSYNC_ARGS+=($exclude)
+
+if [ -n "$EXCLUDES_FILE" ]; then
+  if [ ! -r "$EXCLUDES_FILE" ]; then
+    abort "Could not read excludes file '$EXCLUDES_FILE'"
+  fi
+  RSYNC_ARGS+=("--exclude-from=$EXCLUDES_FILE")
+fi
+
+rsync ${RSYNC_ARGS[@]} "$SRC" "$DEST"
+bless --folder "$DEST/System/Library/CoreServices"
