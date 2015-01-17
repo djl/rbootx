@@ -29,7 +29,6 @@ EXCLUDE=(
   "/private/var/db/dyld/dyld_*"
   "/private/var/folders/*"
   "/private/var/vm/*"
-  "~/Library/Caches/*"
 )
 RSYNC_ARGS=(
   --acls
