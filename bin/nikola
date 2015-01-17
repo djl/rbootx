@@ -55,6 +55,10 @@ usage() {
   exit 2
 }
 
+if ! rsync --version | grep -q "version 3"; then
+  abort "rsync version 3 or higher required"
+fi
+
 while getopts :hna:b:e: o; do
   case "$o" in
     a) POST_SCRIPT="$OPTARG" ;;

@@ -4,6 +4,9 @@ nikola
 `nikola` is a small bash script that creates bootable backups for OS X,
 using rsync.
 
+Note that `nikola` requires the latest rsync
+[from Homebrew](https://github.com/Homebrew/homebrew-dupes/blob/master/rsync.rb).
+
 
 USAGE
 -----
