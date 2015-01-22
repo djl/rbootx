@@ -60,8 +60,6 @@ fi
 
 while getopts :hna:b:e: o; do
   case "$o" in
-    a) POST_SCRIPT="$OPTARG" ;;
-    b) PRE_SCRIPT="$OPTARG" ;;
     e) EXCLUDES_FILE="$OPTARG" ;;
     n) RSYNC_ARGS+=(--dry-run) ;;
     q) RSYNC_ARGS+=(--quiet) ;;
