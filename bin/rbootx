@@ -1,5 +1,5 @@
 #!/bin/bash
-#/ Usage: nikola [options] SRC DEST
+#/ Usage: rbootx [options] SRC DEST
 #/
 #/ Options:
 #/   -e FILENAME      Path to file containing exclusion patterns
