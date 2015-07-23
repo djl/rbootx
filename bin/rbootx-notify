@@ -1,0 +1,36 @@
+#!/bin/sh
+#/ Usage: rbootx-notify SRC DEST
+PROGNAME=$(basename "$0")
+
+SRC="$1"
+DEST="$2"
+FMT="$3"
+DATE="$4"
+
+notify() {
+  title=$1
+  message=$2
+  /usr/bin/osascript -e "display notification \"$message\" with title \"$title\""
+  logger -t "$1" "$2"
+}
+
+if [ $# -lt 2 ]; then
+  grep "^#/" $0 | cut -c4- >&2
+  exit 2
+fi
+
+notify "rbootx" "BEGIN backup to $DEST"
+
+sudo rbootx "$SRC" "$DEST"
+ret=$?
+
+# 0 == succuss
+# 24 == partial transfer due to vanished source files
+if [ $ret -eq 0 -o $ret -eq 24 ]; then
+  message="SUCCESS backup to $DEST"
+else
+  message="FAILED backup to $DEST"
+fi
+
+notify "rbootx" "$message"
+exit $ret
