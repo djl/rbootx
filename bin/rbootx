@@ -50,7 +50,7 @@ abort() {
 }
 
 usage() {
-  grep "^#/" $0 | cut -c4- >&2
+  grep "^#/" "$0" | cut -c4- >&2
   exit 2
 }
 
@@ -97,5 +97,5 @@ if [ -n "$EXCLUDES_FILE" ]; then
   RSYNC_ARGS+=("--exclude-from=$EXCLUDES_FILE")
 fi
 
-rsync ${RSYNC_ARGS[@]} "$SRC" "$DEST"
+rsync "${RSYNC_ARGS[@]}" "$SRC" "$DEST"
 bless --folder "$DEST/System/Library/CoreServices"
