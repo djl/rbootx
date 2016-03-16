@@ -1,12 +1,5 @@
-#!/bin/sh
-#/ Usage: rbootx-notify SRC DEST
-PROGNAME=$(basename "$0")
-
-SRC="$1"
-DEST="$2"
-FMT="$3"
-DATE="$4"
-
+#!/usr/bin/env bash
+#/ Usage: rbootx-notify RBOOTX_ARGS
 notify() {
   title=$1
   message=$2
@@ -14,19 +7,23 @@ notify() {
   logger -t "$1" "$2"
 }
 
-if [ $# -lt 2 ]; then
-  grep "^#/" $0 | cut -c4- >&2
+if [ $# -eq 0 ]; then
+  grep "^#/" "$0" | cut -c4- >&2
   exit 2
 fi
 
-notify "rbootx" "BEGIN backup to $DEST"
+SRC="${@: -2:1}"
+DEST="${@: -1}"
 
-sudo rbootx "$SRC" "$DEST"
+notify "rbootx" "BEGIN backup to $DEST"
+exit
+
+sudo rbootx $@
 ret=$?
 
 # 0 == succuss
 # 24 == partial transfer due to vanished source files
-if [ $ret -eq 0 -o $ret -eq 24 ]; then
+if [ $ret -eq 0 ] || [ $ret -eq 24 ]; then
   message="SUCCESS backup to $DEST"
 else
   message="FAILED backup to $DEST"

@@ -4,6 +4,7 @@
 #/ Options:
 #/   -e FILENAME      Path to file containing exclusion patterns
 #/   -n               Perform a trial run with no changes made
+#/   -s               Disable Spotlight on the destination volume
 #/   -q               Surpress non-error messages
 #/   -h               Show this message and exit
 PROGNAME=$(basename "$0")
@@ -43,6 +44,8 @@ RSYNC_ARGS=(
   --stats
   --xattrs
 )
+DRY_RUN=0
+SPOTLIGHT_DISABLE=0
 
 abort() {
   echo "$PROGNAME: $1" >&2
@@ -54,14 +57,14 @@ usage() {
   exit 2
 }
 
-if ! rsync --version | grep -q "version 3"; then
-  abort "rsync version 3 or higher required"
-fi
+# rsync version 3 is required
+rsync --version | grep -q "version 3" || abort "rsync version 3 or higher required"
 
-while getopts :hna:b:e: o; do
+while getopts :hnsqe: o; do
   case "$o" in
     e) EXCLUDES_FILE="$OPTARG" ;;
-    n) RSYNC_ARGS+=(--dry-run) ;;
+    n) RSYNC_ARGS+=(--dry-run); DRY_RUN=1 ;;
+    s) SPOTLIGHT_DISABLE=1 ;;
     q) RSYNC_ARGS+=(--quiet) ;;
     h) usage ;;
     ?) abort "Invalid option: -$OPTARG" ;;
@@ -70,20 +73,13 @@ done
 
 shift $((OPTIND-1))
 
-if [ $# -ne 2 ]; then
-  usage
-fi
+[ $# -eq 2 ] || usage
 
 SRC="$1"
 DEST="$2"
 
-if [ ! -r "$SRC" ]; then
-  abort "Source '$SRC' not readable"
-fi
-
-if [ ! -w "$DEST" ]; then
-  abort "Destination '$DEST' not writeable"
-fi
+[ -r "$SRC" ] || abort "Source '$SRC' not readable"
+[ -w "$DEST" ] || abort "Destination '$DEST' not writeable"
 
 for e in "${EXCLUDE[@]}"; do
   exclude="$exclude--exclude=$e "
@@ -91,11 +87,13 @@ done
 RSYNC_ARGS+=($exclude)
 
 if [ -n "$EXCLUDES_FILE" ]; then
-  if [ ! -r "$EXCLUDES_FILE" ]; then
-    abort "Could not read excludes file '$EXCLUDES_FILE'"
-  fi
+  [ -r "$EXCLUDES_FILE" ] || abort "Could not read excludes file '$EXCLUDES_FILE'"
   RSYNC_ARGS+=("--exclude-from=$EXCLUDES_FILE")
 fi
 
 rsync "${RSYNC_ARGS[@]}" "$SRC" "$DEST"
-bless --folder "$DEST/System/Library/CoreServices"
+[ "$DRY_RUN" = "0" ] && bless --folder "$DEST/System/Library/CoreServices"
+
+if [ "$SPOTLIGHT_DISABLE" = "1" ] && [ "$DRY_RUN" = "0" ]; then
+  mdutil -d "$DEST"
+fi
