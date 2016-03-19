@@ -16,7 +16,6 @@ SRC="${@: -2:1}"
 DEST="${@: -1}"
 
 notify "rbootx" "BEGIN backup to $DEST"
-exit
 
 sudo rbootx $@
 ret=$?
