@@ -95,5 +95,5 @@ rsync "${RSYNC_ARGS[@]}" "$SRC" "$DEST"
 [ "$DRY_RUN" = "0" ] && bless --folder "$DEST/System/Library/CoreServices"
 
 if [ "$SPOTLIGHT_DISABLE" = "1" ] && [ "$DRY_RUN" = "0" ]; then
-  mdutil -d "$DEST"
+  mdutil -i off "$DEST"
 fi
